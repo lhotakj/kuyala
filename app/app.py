@@ -1,7 +1,13 @@
+import json
+from datetime import time
+
 from flask import Flask, render_template, jsonify
 from kubernetes import client, config
+from flask import Response
+from backend import backend
 
 app = Flask(__name__, template_folder='./templates')
+kuyala_backend = backend.Backend()
 
 @app.route('/')
 def main():
@@ -9,45 +15,16 @@ def main():
 
 @app.route('/list')
 def list():
-    config.load_kube_config()
-    v1 = client.CoreV1Api()
-    apps_v1 = client.AppsV1Api()
-    namespaces = [ns.metadata.name for ns in v1.list_namespace().items]
+    return jsonify(kuyala_backend.get_current_list())
 
-    result = []
-    for ns in namespaces:
-        deployments = apps_v1.list_namespaced_deployment(ns)
-        for dep in deployments.items:
-            annotations = dep.metadata.annotations or {}
-            if "kuyala.enabled" in annotations:
-                creation_date = dep.metadata.creation_timestamp.isoformat() if dep.metadata.creation_timestamp else None
-                condition = None
-                if dep.status and dep.status.conditions:
-                    condition = [
-                        {"type": c.type, "status": c.status}
-                        for c in dep.status.conditions
-                    ]
-                # Read kuyala.replicasOff, default 0
-                replicas_off = int(annotations.get("kuyala.replicasOff", 0))
-                # Read spec.replicas, default 1
-                replicas_on = int(annotations.get("kuyala.replicasOn", 1))
-                replicas_current = getattr(dep.status, "replicas", 0)
-                if not replicas_current:
-                    replicas_current = 0
-                result.append({
-                    "namespace": ns,
-                    "name": dep.metadata.name,
-                    "applicationName": annotations.get("kuyala.applicationName", dep.metadata.name),
-                    "annotations": annotations,
-                    "creationDate": creation_date,
-                    "condition": condition,
-                    "color": annotations.get("kuyala.color", ""),
-                    "replicasOff": replicas_off,
-                    "replicasOn": replicas_on,
-                    "replicasCurrent": replicas_current
-                })
-
-    return jsonify(result)
+@app.route('/list_stream')
+def list_stream():
+    def event_stream():
+        while True:
+            data = kuyala_backend.get_current_list() # Your function to get data
+            yield f"data: {json.dumps(data)}\n\n"
+            time.sleep(2)  # Adjust interval as needed
+    return Response(event_stream(), mimetype="text/event-stream")
 
 from flask import request
 
