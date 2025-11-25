@@ -100,16 +100,22 @@ function attachButtonHandler(card, app) {
 
 
 
-async function fetchAndRender() {
-    try {
-        const res = await fetch('/list');
-        const apps = await res.json();
-        renderApps(apps); // Always update cards, only deltas are changed
-    } catch (e) {
-        // Optionally handle error
-    }
-}
+// async function fetchAndRender() {
+//     try {
+//         const res = await fetch('/list');
+//         const apps = await res.json();
+//         renderApps(apps); // Always update cards, only deltas are changed
+//     } catch (e) {
+//         // Optionally handle error
+//     }
+// }
 
 
-setInterval(fetchAndRender, 2000);
-window.addEventListener('DOMContentLoaded', fetchAndRender);
+// setInterval(fetchAndRender, 2000);
+// window.addEventListener('DOMContentLoaded', fetchAndRender);
+
+const evtSource = new EventSource('/list_stream');
+evtSource.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    renderApps(data); // Your update function
+};

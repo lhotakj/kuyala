@@ -1,32 +1,39 @@
 import json
-from datetime import time
+import time
 
 from flask import Flask, render_template, jsonify
-from kubernetes import client, config
 from flask import Response
+from kubernetes import client, config
+
 from backend import backend
 
 app = Flask(__name__, template_folder='./templates')
 kuyala_backend = backend.Backend()
 
+
 @app.route('/')
 def main():
     return render_template('start.html')
+
 
 @app.route('/list')
 def list():
     return jsonify(kuyala_backend.get_current_list())
 
+
 @app.route('/list_stream')
 def list_stream():
     def event_stream():
         while True:
-            data = kuyala_backend.get_current_list() # Your function to get data
+            data = kuyala_backend.get_current_list()  # Your function to get data
             yield f"data: {json.dumps(data)}\n\n"
             time.sleep(2)  # Adjust interval as needed
+
     return Response(event_stream(), mimetype="text/event-stream")
 
+
 from flask import request
+
 
 # Use the actual deployment name, not the display name from annotations
 @app.route('/action', methods=['POST'])
