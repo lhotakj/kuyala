@@ -1,5 +1,21 @@
 let lastApps = {};
 
+function setStatus(message, type) {
+    const statusElement = document.getElementById('status-message');
+    if (statusElement) {
+        statusElement.textContent = message;
+        statusElement.className = 'alert alert-' + type; // Types: info, success, danger
+        statusElement.style.display = 'block';
+
+        // Hide success or info messages after 3 seconds
+        if (type === 'success' || type === 'info') {
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 3000);
+        }
+    }
+}
+
 function hexToRgba(hex, alpha = 0.5) {
     hex = hex.replace('#', '');
     if (hex.length === 3) {
@@ -14,11 +30,14 @@ function hexToRgba(hex, alpha = 0.5) {
 
 function renderApps(apps) {
     const grid = document.getElementById('appsGrid');
+    if (!grid) return; // Exit if the grid isn't on the page
+
     const newApps = {};
     apps.forEach(app => {
         newApps[app.namespace + '|' + app.name] = app;
     });
 
+    // Update or remove existing cards
     Array.from(grid.children).forEach(card => {
         const key = card.dataset.key;
         if (!(key in newApps)) {
@@ -31,6 +50,7 @@ function renderApps(apps) {
         }
     });
 
+    // Add new cards
     Object.keys(newApps).forEach(key => {
         if (!lastApps[key]) {
             const app = newApps[key];
@@ -88,32 +108,50 @@ function attachButtonHandler(card, app) {
                 name: btn.dataset.name,
                 scale: btn.dataset.scale
             };
-            await fetch('/action', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
+            // setStatus('Sending action...', 'info');
+            try {
+                const response = await fetch('/action', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                if (response.ok) {
+                  //  setStatus('Action successful!', 'success');
+                } else {
+                    const errorData = await response.json();
+                    setStatus(`Action failed: ${errorData.message || 'Unknown error'}`, 'danger');
+                }
+            } catch (error) {
+                setStatus(`Action failed: ${error.message}`, 'danger');
+            }
         };
     }
 }
 
+function fetchData() {
+    // This function is for the "Refresh Data" button.
+    // A simple page reload is the easiest way to force the EventSource to reconnect.
+    window.location.reload();
+}
 
-// async function fetchAndRender() {
-//     try {
-//         const res = await fetch('/list');
-//         const apps = await res.json();
-//         renderApps(apps); // Always update cards, only deltas are changed
-//     } catch (e) {
-//         // Optionally handle error
-//     }
-// }
-
-
-// setInterval(fetchAndRender, 2000);
-// window.addEventListener('DOMContentLoaded', fetchAndRender);
-
+// --- Main Execution ---
 const evtSource = new EventSource('/list_stream');
+
+evtSource.onopen = function() {
+    // setStatus('Connecting to live stream...', 'info');
+};
+
 evtSource.onmessage = function (event) {
-    const data = JSON.parse(event.data);
-    renderApps(data); // Your update function
+    const result = JSON.parse(event.data);
+    if (result.status === 'success') {
+        // setStatus('Data updated.', 'success');
+        renderApps(result.data); // Pass the array of apps to the render function
+    } else {
+        setStatus(`Error: ${result.message}`, 'danger');
+    }
+};
+
+evtSource.onerror = function (err) {
+    setStatus('Stream connection failed. Please refresh the page.', 'danger');
+    console.error("EventSource failed:", err);
 };

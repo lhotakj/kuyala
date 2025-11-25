@@ -292,6 +292,18 @@ body {
     color: #86EFAC;
 }
 
+.alert-error {
+    background-color: #F0FDF4;
+    border: 1px solid #ff9090;
+    color: #e40101;
+}
+
+[data-theme="dark"] .alert-error {
+    background-color: #600000;
+    border: 1px solid #e40101;
+    color: #ffdbdb;
+}
+
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
