@@ -82,7 +82,7 @@ function getCardHTML(app) {
 function attachButtonHandler(card, app) {
     const btn = card.querySelector('button.button-primary');
     if (btn) {
-        btn.onclick = async function() {
+        btn.onclick = async function () {
             const data = {
                 namespace: btn.dataset.namespace,
                 name: btn.dataset.name,
@@ -90,14 +90,12 @@ function attachButtonHandler(card, app) {
             };
             await fetch('/action', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(data)
             });
         };
     }
 }
-
-
 
 
 // async function fetchAndRender() {
@@ -115,7 +113,7 @@ function attachButtonHandler(card, app) {
 // window.addEventListener('DOMContentLoaded', fetchAndRender);
 
 const evtSource = new EventSource('/list_stream');
-evtSource.onmessage = function(event) {
+evtSource.onmessage = function (event) {
     const data = JSON.parse(event.data);
     renderApps(data); // Your update function
 };

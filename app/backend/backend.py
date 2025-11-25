@@ -1,5 +1,5 @@
-from flask import Flask, render_template, jsonify
 from kubernetes import client, config
+
 
 class Backend:
 
