@@ -1,0 +1,20 @@
+FROM python:3.9.6-alpine3.14
+
+ARG SLACK_API_TOKEN
+ARG VERIFICATION_TOKEN
+ARG LOG_FOLDER
+
+ENV SLACK_API_TOKEN $SLACK_API_TOKEN
+ENV VERIFICATION_TOKEN $VERIFICATION_TOKEN
+ENV LOG_FOLDER $LOG_FOLDER
+
+COPY . /app
+WORKDIR /app
+RUN apk add build-base
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+
+RUN mkdir -p $LOG_FOLDER
+
+EXPOSE 5000
+CMD ["gunicorn", "--bind" ,"0.0.0.0:5000", "app.app:app"]

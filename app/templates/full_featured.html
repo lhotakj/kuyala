@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your App - Start</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <span>Your App</span>
+            </div>
+            <nav class="nav">
+                <a href="{{ url_for('main') }}" class="nav-link">Home</a>
+                <a href="#" class="nav-link">Features</a>
+                <a href="#" class="nav-link">About</a>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <svg class="sun-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <svg class="moon-icon" style="display:none;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                    </svg>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h1 class="card-header">Welcome to Your Application</h1>
+            <p class="card-description">This interface uses Claude.ai's design system with clean typography, subtle colors, and thoughtful spacing. Toggle between light and dark themes using the button in the header.</p>
+
+            <div class="button-group">
+                <button class="button button-primary">Get Started</button>
+                <button class="button button-secondary">Learn More</button>
+                <button class="button button-outline">View Docs</button>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            This is an informational message that adapts to both light and dark themes.
+        </div>
+
+        <div class="card">
+            <h2 class="card-header">Example Form</h2>
+            <p class="card-description">Clean, accessible form inputs with proper focus states that work in both themes.</p>
+
+            <form>
+                <div class="input-group">
+                    <label class="label" for="name">Name</label>
+                    <input type="text" id="name" class="input" placeholder="Enter your name">
+                </div>
+
+                <div class="input-group">
+                    <label class="label" for="email">Email</label>
+                    <input type="email" id="email" class="input" placeholder="your@email.com">
+                </div>
+
+                <div class="input-group">
+                    <label class="label" for="message">Message</label>
+                    <textarea id="message" class="input textarea" placeholder="Type your message here..."></textarea>
+                </div>
+
+                <button type="submit" class="button button-primary">Submit</button>
+            </form>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3 class="card-header">Feature One</h3>
+                <p class="card-description">Clean and minimal card design with consistent spacing and typography.</p>
+            </div>
+            <div class="card">
+                <h3 class="card-header">Feature Two</h3>
+                <p class="card-description">Responsive grid layout that adapts to different screen sizes.</p>
+            </div>
+            <div class="card">
+                <h3 class="card-header">Feature Three</h3>
+                <p class="card-description">Subtle shadows and borders create visual hierarchy.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2024 Your Application. Built with Claude's design system.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
