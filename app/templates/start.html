@@ -29,27 +29,24 @@
     </header>
 
     <main class="container">
-        {% if config_error is not none %}
+        {% if config_error != "" %}
         <div class="alert alert-error">
             Invalid configuration. Expecting KUBECONFIG environment variable to be passed to docker. Please refer to the Get Started documentation.
         </div>
         {% endif %}
 
-        <div id="status-message" class="alert" style="display: none;"></div>
+        <div id="status-message" style="display: none;"></div>
 
-        {% if config_error is none %}
         <div class="card">
             <h1 class="card-header">Welcome to Kuyala</h1>
             <p class="card-description">Kuyala is an ultimate tool for managing your kubernetes cluster</p>
 
             <div class="button-group">
-                <button class="button button-primary" onclick="fetchData()">Refresh Data</button>
                 <a class="button button-outline" href="https://github.com/lhotakj/kuyala" target="_blank" rel="noopener">Visit Github</a>
             </div>
         </div>
 
         <div id="appsGrid" class="grid apps"></div>
-        {% endif %}
 
     </main>
 
@@ -57,8 +54,8 @@
         <p>&copy; 2025 Jaroslav Lhoták <a href="mailto:jarda@lhotak.net">jarda@lhotak.net<a>.</p>
     </footer>
 
+    {% if config_error == "" %}
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    {% if config_error is none %}
     <script src="{{ url_for('static', filename='js/apps.js') }}"></script>
     {% endif %}
 </body>

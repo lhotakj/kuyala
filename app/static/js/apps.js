@@ -4,7 +4,7 @@ function setStatus(message, type) {
     const statusElement = document.getElementById('status-message');
     if (statusElement) {
         statusElement.textContent = message;
-        statusElement.className = 'alert alert-' + type; // Types: info, success, danger
+        statusElement.className = 'alert alert-' + type; // Types: info, success, error
         statusElement.style.display = 'block';
 
         // Hide success or info messages after 3 seconds
@@ -119,10 +119,10 @@ function attachButtonHandler(card, app) {
                   //  setStatus('Action successful!', 'success');
                 } else {
                     const errorData = await response.json();
-                    setStatus(`Action failed: ${errorData.message || 'Unknown error'}`, 'danger');
+                    setStatus(`Action failed: ${errorData.message || 'Unknown error'}`, 'error');
                 }
             } catch (error) {
-                setStatus(`Action failed: ${error.message}`, 'danger');
+                setStatus(`Action failed: ${error.message}`, 'error');
             }
         };
     }
@@ -147,11 +147,11 @@ evtSource.onmessage = function (event) {
         // setStatus('Data updated.', 'success');
         renderApps(result.data); // Pass the array of apps to the render function
     } else {
-        setStatus(`Error: ${result.message}`, 'danger');
+        setStatus(`Error: ${result.message}`, 'error');
     }
 };
 
 evtSource.onerror = function (err) {
-    setStatus('Stream connection failed. Please refresh the page.', 'danger');
+    setStatus('Stream connection failed. Please refresh the page.', 'error');
     console.error("EventSource failed:", err);
 };

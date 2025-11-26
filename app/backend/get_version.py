@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import re
 
@@ -8,7 +10,7 @@ def get_version():
     # Get the absolute path to the directory containing this script (backend/)
     script_dir = os.path.dirname(os.path.abspath(__file__))
     # Construct the path to the __init__.py file (app/__init__.py)
-    version_file_path = os.path.join(script_dir, '..', '__init__.py')
+    version_file_path = os.path.join(script_dir, '__init__.py')
 
     try:
         with open(version_file_path, 'r') as f:
