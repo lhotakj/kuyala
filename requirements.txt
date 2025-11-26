@@ -1,5 +1,16 @@
-gunicorn>=20.0.0
-Flask~=3.0.0
-requests
-kubernetes
-gevent
+# File: requirements.txt
+# Kuyala - Kubernetes Deployment Manager Dependencies
+
+# Web Framework
+Flask==3.0.0
+Werkzeug==3.0.1
+
+# Kubernetes Client
+kubernetes==28.1.0
+
+# Production Server (with gevent for SSE support)
+gunicorn==21.2.0
+gevent==23.9.1
+
+# Optional but recommended
+python-dotenv==1.0.0

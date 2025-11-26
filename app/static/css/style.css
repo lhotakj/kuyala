@@ -1,3 +1,5 @@
+/* File: app/static/css/style.css */
+
 * {
     margin: 0;
     padding: 0;
@@ -18,6 +20,8 @@
     --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
     --lozenge-bg: #e0e7ff;
     --lozenge-text: #3730a3;
+    --lozenge-off-bg: #fee2e2;
+    --lozenge-off-text: #991b1b;
 }
 
 [data-theme="dark"] {
@@ -34,6 +38,8 @@
     --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
     --lozenge-bg: #3730a3;
     --lozenge-text: #e0e7ff;
+    --lozenge-off-bg: #7f1d1d;
+    --lozenge-off-text: #fecaca;
 }
 
 body {
@@ -135,6 +141,12 @@ body {
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     letter-spacing: 0.02em;
     z-index: 1;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.lozenge.lozenge-off {
+    background: var(--lozenge-off-bg);
+    color: var(--lozenge-off-text);
 }
 
 .card {
@@ -144,25 +156,34 @@ body {
     padding: 2rem;
     margin-bottom: 1.5rem;
     box-shadow: var(--shadow-sm);
-    transition: background-color 0.3s, border-color 0.3s;
+    transition: background-color 0.3s, border-color 0.3s, box-shadow 0.2s;
+    position: relative;
 }
 
 .card .card-replica-info {
-    color: var(--text-primary);
-    font-size: 70%;
-    font-style:italic;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-style: italic;
+    margin-top: 0.5rem;
 }
+
 .card.app:hover {
-    box-shadow: 0 4px 16px rgba(0, 123, 255, 0.2);
-    border-color: #007bff;
+    box-shadow: 0 4px 16px rgba(204, 120, 92, 0.2);
+    border-color: var(--accent-orange);
     transition: box-shadow 0.2s, border-color 0.2s;
 }
 
 .grid.apps {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 2rem;
     margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+    .grid.apps {
+        grid-template-columns: 1fr;
+    }
 }
 
 .card-header {
@@ -191,12 +212,17 @@ body {
     font-family: inherit;
 }
 
+.button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .button-primary {
     background-color: var(--accent-orange);
     color: white;
 }
 
-.button-primary:hover {
+.button-primary:hover:not(:disabled) {
     background-color: var(--accent-hover);
 }
 
@@ -206,7 +232,7 @@ body {
     border: 1px solid var(--border-color);
 }
 
-.button-secondary:hover {
+.button-secondary:hover:not(:disabled) {
     background-color: var(--border-color);
 }
 
@@ -216,7 +242,7 @@ body {
     border: 1px solid var(--border-color);
 }
 
-.button-outline:hover {
+.button-outline:hover:not(:disabled) {
     background-color: var(--bg-tertiary);
 }
 
@@ -224,6 +250,7 @@ body {
     display: flex;
     gap: 0.75rem;
     flex-wrap: wrap;
+    margin-top: 1rem;
 }
 
 .input-group {
@@ -266,6 +293,18 @@ body {
     border-radius: 6px;
     margin-bottom: 1.5rem;
     font-size: 0.9375rem;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .alert-info {
@@ -293,15 +332,15 @@ body {
 }
 
 .alert-error {
-    background-color: #F0FDF4;
-    border: 1px solid #ff9090;
-    color: #e40101;
+    background-color: #FEF2F2;
+    border: 1px solid #FCA5A5;
+    color: #991B1B;
 }
 
 [data-theme="dark"] .alert-error {
     background-color: #600000;
-    border: 1px solid #e40101;
-    color: #ffdbdb;
+    border: 1px solid #DC2626;
+    color: #FECACA;
 }
 
 .grid {
@@ -316,4 +355,13 @@ body {
     padding: 2rem;
     color: var(--text-tertiary);
     font-size: 0.875rem;
+}
+
+.footer a {
+    color: var(--accent-orange);
+    text-decoration: none;
+}
+
+.footer a:hover {
+    text-decoration: underline;
 }

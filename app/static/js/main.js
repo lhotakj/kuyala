@@ -1,3 +1,5 @@
+// File: app/static/js/main.js
+
 document.addEventListener('DOMContentLoaded', function() {
     const themeToggle = document.getElementById('themeToggle');
     const html = document.documentElement;
@@ -10,16 +12,20 @@ document.addEventListener('DOMContentLoaded', function() {
     updateIcons(savedTheme);
 
     // Toggle theme on button click
-    themeToggle.addEventListener('click', () => {
-        const currentTheme = html.getAttribute('data-theme');
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
 
-        html.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        updateIcons(newTheme);
-    });
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateIcons(newTheme);
+        });
+    }
 
     function updateIcons(theme) {
+        if (!sunIcon || !moonIcon) return;
+
         if (theme === 'dark') {
             sunIcon.style.display = 'none';
             moonIcon.style.display = 'block';
@@ -29,5 +35,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    console.log('Application loaded with Claude design system and theme switching');
+    console.log('Theme system initialized with theme:', savedTheme);
 });

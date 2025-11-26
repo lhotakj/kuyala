@@ -1,11 +1,11 @@
+<!-- File: app/templates/start.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kuyala</title>
+    <title>Kuyala - Kubernetes Deployment Manager</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
 </head>
 <body>
     <header class="header">
@@ -15,7 +15,7 @@
                 <span>Kuyala</span>
             </div>
             <nav class="nav">
-                <a href="#" class="nav-link">About</a>
+                <a href="https://github.com/lhotakj/kuyala" target="_blank" rel="noopener" class="nav-link">About</a>
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
                     <svg class="sun-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
@@ -39,19 +39,26 @@
 
         <div class="card">
             <h1 class="card-header">Welcome to Kuyala</h1>
-            <p class="card-description">Kuyala is an ultimate tool for managing your kubernetes cluster</p>
+            <p class="card-description">
+                Kuyala is a real-time Kubernetes deployment manager.
+                Manage your deployments with live updates via Server-Sent Events.
+            </p>
 
             <div class="button-group">
                 <a class="button button-outline" href="https://github.com/lhotakj/kuyala" target="_blank" rel="noopener">Visit Github</a>
             </div>
         </div>
 
-        <div id="appsGrid" class="grid apps"></div>
+        <div id="appsGrid" class="grid apps">
+            <div class="card">
+                <p class="card-description">Connecting to server...</p>
+            </div>
+        </div>
 
     </main>
 
     <footer class="footer">
-        <p>&copy; 2025 Jaroslav Lhoták <a href="mailto:jarda@lhotak.net">jarda@lhotak.net<a>.</p>
+        <p>&copy; 2025 Jaroslav Lhoták <a href="mailto:jarda@lhotak.net">jarda@lhotak.net</a>.</p>
     </footer>
 
     {% if config_error == "" %}
