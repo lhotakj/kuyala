@@ -1,32 +1,47 @@
 # ---- Builder Stage ----
-# Use a slim Python 3.12 image that has build tools available
-FROM python:3.14-slim-bookworm AS builder
+# Use the latest slim Python 3 image and add Node.js for minification tools
+FROM python:3-slim-bookworm AS builder
 
 # Set the working directory
 WORKDIR /app
 
-# Install build essentials for packages that might need compilation (like gunicorn)
-# and clean up apt cache to keep the layer small
+# Install build essentials, Node.js, and npm for asset minification
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    nodejs \
+    npm \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a virtual environment to isolate dependencies
-RUN python -m venv /opt/venv
+# Use npm to install html-minifier globally
+RUN npm install -g html-minifier
 
-# Set the PATH to use the virtual environment
+# Create and activate a virtual environment for Python dependencies
+RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy only the requirements file first to leverage Docker's layer caching
+# Install Python dependencies, including rjsmin and rcssmin
 COPY requirements.txt .
-
-# Install the Python dependencies into the virtual environment
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the application source code into the builder stage
+COPY . .
+
+# --- Minify Static Assets ---
+# This multi-step command finds and minifies all assets in place.
+RUN \
+    echo "Minifying JavaScript files..."; \
+    find app/static/js -name '*.js' -exec sh -c 'python -m rjsmin < "$0" > "$0.tmp" && mv "$0.tmp" "$0"' {} \; && \
+    \
+    echo "Minifying CSS files..."; \
+    find app/static/css -name '*.css' -exec sh -c 'python -m rcssmin < "$0" > "$0.tmp" && mv "$0.tmp" "$0"' {} \; && \
+    \
+    echo "Minifying HTML files..."; \
+    find app/templates -name '*.html' -exec sh -c 'html-minifier --collapse-whitespace --remove-comments --minify-js true --minify-css true -o "$0.tmp" "$0" && mv "$0.tmp" "$0"' {} \;
 
 
 # ---- Final Stage ----
-# Start from a clean, minimal Python image
-FROM python:3.14-slim-bookworm
+# Start from a clean, minimal Python image, which doesn't include Node.js or build tools
+FROM python:3-slim-bookworm
 
 # Set the working directory
 WORKDIR /app
@@ -34,10 +49,10 @@ WORKDIR /app
 # Create a non-root user for security
 RUN addgroup --system nonroot && adduser --system --ingroup nonroot nonroot
 
-# Copy the virtual environment from the builder stage
+# Copy the virtual environment (with dependencies) from the builder stage
 COPY --from=builder /opt/venv /opt/venv
 
-# Copy the minified application code from the builder stage
+# Copy only the minified application code from the builder stage
 COPY --from=builder /app /app
 
 # Make the production script executable
@@ -47,8 +62,9 @@ RUN chmod +x kuyala_production.sh
 ENV PATH="/opt/venv/bin:$PATH"
 
 # --- Environment Variables for Runtime Configuration ---
-ENV KUBECONFIG=""
+# These provide default values that can be overridden at runtime.
 ENV LOG_LEVEL="INFO"
+ENV KUBECONFIG=""
 ENV KUBECONFIG_CONTENT=""
 # --- End Environment Variables ---
 
@@ -61,5 +77,5 @@ USER nonroot
 # Expose the port the app will run on
 EXPOSE 5000
 
-# Define the command to run the application using the production script
+# Define the command to run the application
 CMD ["./kuyala_production.sh"]
