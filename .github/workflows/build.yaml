@@ -1,6 +1,7 @@
-name: Build and Publish Docker Image
+name: Build and publish Docker Image to dockerhub
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
