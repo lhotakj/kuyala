@@ -43,11 +43,12 @@ RUN \
 # Start from a clean, minimal Python image, which doesn't include Node.js or build tools
 FROM python:3-slim-bookworm
 
-# Set the working directory
+# Set the application's working directory
 WORKDIR /app
 
-# Create a non-root user for security
-RUN addgroup --system nonroot && adduser --system --ingroup nonroot nonroot
+# Create a non-root user with a dedicated home directory
+RUN addgroup --system nonroot && \
+    adduser --system --ingroup nonroot --home /home/nonroot --shell /bin/bash nonroot
 
 # Copy the virtual environment (with dependencies) from the builder stage
 COPY --from=builder /opt/venv /opt/venv
@@ -69,10 +70,14 @@ ENV KUBECONFIG_CONTENT=""
 # --- End Environment Variables ---
 
 # Change ownership of the app directory to the non-root user
-RUN chown -R nonroot:nonroot /app
+# Also ensure the home directory is owned by the non-root user
+RUN chown -R nonroot:nonroot /app /home/nonroot
 
 # Switch to the non-root user
 USER nonroot
+
+# Set the HOME environment variable so 'cd ~' works correctly
+ENV HOME=/home/nonroot
 
 # Expose the port the app will run on
 EXPOSE 5000
