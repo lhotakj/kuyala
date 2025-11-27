@@ -46,7 +46,7 @@ spec:
     spec:
       containers:
       - name: kuyala
-        image: kuyala:latest
+        image: lhotakj/kuyala:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000

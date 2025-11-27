@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  kuyala:
+    build:
+      context: .
+      dockerfile: docker/dockerfile
+    image: lhotakj/kuyala:latest
+    container_name: kuyala
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    # To use a local kubeconfig file, uncomment the following lines:
+    # volumes:
+    #   - ~/.kube:/root/.kube:ro
