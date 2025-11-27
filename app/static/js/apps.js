@@ -179,7 +179,12 @@ class KuyalaSSEClient {
             </div>
         `;
 
-        this.appsGrid.appendChild(card);
+        if (existing) {
+            this.appsGrid.replaceChild(card, existing);
+        } else {
+            this.appsGrid.appendChild(card);
+        }
+
     }
 
     updateDeploymentCard(deployment) {

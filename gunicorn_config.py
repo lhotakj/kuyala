@@ -46,8 +46,8 @@ user = None
 group = None
 tmp_upload_dir = None
 
-# Preload app for faster worker spawning
-preload_app = True
+# Disable the preload to let each worker started fresh after fork, needed for recursion error
+preload_app = False
 
 # Worker restart settings
 max_requests = 10000

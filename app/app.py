@@ -1,14 +1,16 @@
+from gevent import monkey
+monkey.patch_all()
+# important for production - gevent is swapping out Python’s blocking I/O functions with cooperative versions,
+# so the app can handle thousands of concurrent SSE connections without threads.
+
 import json
 import time
-import os
-import logging
 import threading
 import queue
 from flask import Flask, render_template, jsonify, Response, request, stream_with_context
 from kubernetes import client, config, watch
 
 from .backend import backend
-
 
 app = Flask(__name__, template_folder='./templates')
 kuyala_backend = backend.Backend()

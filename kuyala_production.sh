@@ -41,6 +41,7 @@ exec gunicorn \
     --timeout 300 \
     --graceful-timeout 120 \
     --log-level $LOG_LEVEL \
+    --preload \
     --access-logfile $GUNICORN_ACCESS_LOG \
     --error-logfile $GUNICORN_ERROR_LOG \
     app.app:app
