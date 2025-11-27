@@ -26,7 +26,8 @@ jobs:
       - name: Build Docker image
         run: |
           chmod +x docker/docker_build.sh
-          ./docker/docker_build.sh
+          cd docker
+          ./docker_build.sh
 
       - name: Get version from build
         id: get_version
