@@ -8,10 +8,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <header class="header">
+
+    <header class="header"  >
         <div class="header-content">
             <div class="logo">
-                <div class="logo-icon"></div>
+                <img src="static/img/logo-small.png" alt="Kuyala logo">
                 <span>Kuyala</span>
             </div>
             <nav class="nav">
@@ -29,6 +30,8 @@
         </div>
     </header>
 
+    <div id="status-message" style="display: none;"></div>
+
     <main class="container">
         {% if config_error != "" %}
         <div class="alert alert-error">
@@ -36,9 +39,9 @@
         </div>
         {% endif %}
 
-        <div id="status-message" style="display: none;"></div>
 
-        <div class="card">
+
+        <div class="card bg" >
             <h1 class="card-header">Welcome to Kuyala</h1>
             <p class="card-description">
                 Kuyala is a real-time Kubernetes deployment manager.
@@ -52,7 +55,7 @@
 
         <div id="appsGrid" class="grid apps">
             <div class="card">
-                <p class="card-description">Connecting to server...</p>
+                <p class="card-description">Connecting to your cluster ...</p>
             </div>
         </div>
 

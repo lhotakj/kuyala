@@ -402,3 +402,19 @@ body {
 .footer a:hover {
     text-decoration: underline;
 }
+
+#status-message {
+    position: absolute;
+    top: 10px;       /* distance from the top */
+    right: 10px;     /* distance from the right */
+    width: 200px;
+    left: auto;      /* not needed, but harmless */
+    z-index: 100;    /* ensures it sits above other elements */
+}
+
+.bg {
+  background-image: url(static/img/background.png);
+  background-repeat: no-repeat;
+  background-size: cover;       /* scales to cover the header area */
+  background-position: left top; /* aligns to top-left corner */
+}

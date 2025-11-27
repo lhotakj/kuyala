@@ -183,8 +183,36 @@ class KuyalaSSEClient {
 
     }
 
+    // updateDeploymentCard(deployment) {
+    //     this.createDeploymentCard(deployment);
+    // }
+
     updateDeploymentCard(deployment) {
-        this.createDeploymentCard(deployment);
+        const key = `${deployment.namespace}/${deployment.name}`;
+        const cardId = `card-${key.replace(/\//g, '-')}`;
+        const card = document.getElementById(cardId);
+
+        if (card) {
+            // Just update the relevant parts
+            const isOn = deployment.replicasCurrent > 0;
+            const buttonText = isOn ? 'Turn Off' : 'Turn On';
+            const buttonClass = isOn ? 'button-turn-off' : 'button-turn-on';
+            const statusText = isOn ? 'Running' : 'Stopped';
+            const lozengeClass = isOn ? 'lozenge-light-green' : 'lozenge-light-red';
+
+            card.querySelector('.lozenge').textContent = statusText;
+            card.querySelector('.lozenge').className = `lozenge ${lozengeClass}`;
+            card.querySelector('.card-replica-info').textContent =
+                `Current replicas: ${deployment.replicasCurrent} ${isOn ? `(will scale to ${deployment.replicasOff})` : `(will scale to ${deployment.replicasOn})`}`;
+
+            const button = card.querySelector('button');
+            button.textContent = buttonText;
+            button.className = `button ${buttonClass}`;
+            button.setAttribute('onclick', `kuyalaApp.toggleDeployment('${deployment.namespace}', '${deployment.name}', ${!isOn})`);
+        } else {
+            // If card doesn’t exist yet, create it
+            this.createDeploymentCard(deployment);
+        }
     }
 
     removeDeploymentCard(key) {
@@ -236,6 +264,13 @@ class KuyalaSSEClient {
                     `${deployment.applicationName} ${turnOn ? 'started' : 'stopped'} successfully`,
                     'success'
                 );
+
+                // Refresh button state right away
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = turnOn ? 'Turn Off' : 'Turn On';
+                }
+
             } else {
                 throw new Error(result.message || 'Action failed');
             }
