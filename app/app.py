@@ -79,7 +79,8 @@ def watch_deployments():
                     "namespace": deployment.metadata.namespace,
                     "name": deployment.metadata.name,
                     "applicationName": annotations.get("kuyala.applicationName", deployment.metadata.name),
-                    "color": annotations.get("kuyala.color", ""),
+                    "backgroundColor": annotations.get("kuyala.backgroundColor", ""),
+                    "textColor": annotations.get("kuyala.textColor", ""),
                     "replicasOff": replicas_off,
                     "replicasOn": replicas_on,
                     "replicasCurrent": replicas_current,
@@ -126,7 +127,7 @@ def events():
         kuyala_backend.logging.info(f"SSE client connected: {client_id}. Total clients: {len(connected_clients)}")
 
         # Send initial connection message
-        yield f"event: connected\ndata: {json.dumps({'client_id': client_id, 'message': 'Connected to Kuyala'})}\n\n"
+        yield f"event: connected\ndata: {json.dumps({'client_id': client_id, 'message': 'Connected to Kuyala', 'server_node_name': kuyala_backend.master_node_name, 'server_node_ip': kuyala_backend.master_node_ip})}\n\n"
 
         # Send initial deployment list
         initial_data = kuyala_backend.get_current_list()
@@ -179,12 +180,12 @@ def events():
     )
 
 
-@app.route('/list')
-def list():
-    """Legacy endpoint - returns current deployment list"""
-    kuyala_backend.logging.debug("Request received for /list endpoint.")
-    return jsonify(kuyala_backend.get_current_list())
-
+# @app.route('/list')
+# def list():
+#     """Legacy endpoint - returns current deployment list"""
+#     kuyala_backend.logging.debug("Request received for /list endpoint.")
+#     return jsonify(kuyala_backend.get_current_list())
+#
 
 @app.route('/action', methods=['POST'])
 def action():
@@ -240,6 +241,8 @@ def health():
         'connected_clients': len(connected_clients),
         'k8s_connected': kuyala_backend.client is not None,
         'k8s_version': kuyala_backend.kubernetes_version,
+        'master_node_ip': kuyala_backend.master_node_ip,
+        'master_node_name': kuyala_backend.master_node_name,
         'timestamp': time.time()
     }), 200
 

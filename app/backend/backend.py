@@ -19,6 +19,8 @@ class Backend(metaclass=SingletonMeta):
     client = None
     logging = logging
     kubernetes_version = None
+    master_node_ip = None
+    master_node_name = None
 
 
 
@@ -67,6 +69,18 @@ class Backend(metaclass=SingletonMeta):
             api = client.VersionApi(self.client)
             version_info = api.get_code()
             self.kubernetes_version = f"{version_info.major}.{version_info.minor}"
+
+            v1 = client.CoreV1Api(self.client)
+            nodes = v1.list_node()
+            for node in nodes.items:
+                labels = node.metadata.labels or {}
+                if "node-role.kubernetes.io/master" in labels or "node-role.kubernetes.io/control-plane" in labels:
+                    for addr in node.status.addresses:
+                        if addr.type == "InternalIP":
+                            self.master_node_ip = addr.address
+                            self.master_node_name = node.metadata.name
+                            logging.info(f"Master node {self.master_node_name} has IP {self.master_node_ip}")
+
             logging.info(f"Successfully validated connection to Kubernetes API server. Version {self.kubernetes_version}")
             return True
         except ApiException as e:
@@ -144,7 +158,7 @@ class Backend(metaclass=SingletonMeta):
 
         logging.info(f"Attempting to scale deployment '{name}' in namespace '{namespace}' to {scale} replicas.")
         try:
-            apps_v1 = self.client.AppsV1Api()
+            apps_v1 = client.AppsV1Api(self.client)
             body = {'spec': {'replicas': scale}}
             apps_v1.patch_namespaced_deployment_scale(name, namespace, body)
             logging.info(f"Successfully scaled deployment '{name}'.")
@@ -196,7 +210,8 @@ class Backend(metaclass=SingletonMeta):
                             "annotations": annotations,
                             "creationDate": creation_date,
                             "condition": condition,
-                            "color": annotations.get("kuyala.color", ""),
+                            "backgroundColor": annotations.get("kuyala.backgroundColor", ""),
+                            "textColor": annotations.get("kuyala.textColor", ""),
                             "replicasOff": replicas_off,
                             "replicasOn": replicas_on,
                             "replicasCurrent": replicas_current

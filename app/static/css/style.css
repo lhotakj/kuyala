@@ -22,6 +22,10 @@
     --lozenge-text: #3730a3;
     --lozenge-off-bg: #fee2e2;
     --lozenge-off-text: #991b1b;
+    --red: #9c1717;
+    --green: #0c630c;
+    --light-red: #ed4a4a;
+    --light-green: #28a328;
 }
 
 [data-theme="dark"] {
@@ -149,6 +153,15 @@ body {
     color: var(--lozenge-off-text);
 }
 
+.lozenge.lozenge-light-green {
+    background: var(--light-green);
+    color: white;
+}
+.lozenge.lozenge-light-red {
+    background: var(--light-red);
+    color: white;
+}
+
 .card {
     background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
@@ -216,6 +229,17 @@ body {
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+.button-turn-off {
+    background-color: var(--red);
+    color: white;
+}
+
+.button-turn-on {
+    background-color: var(--green);
+    color: white;
+}
+
 
 .button-primary {
     background-color: var(--accent-orange);
