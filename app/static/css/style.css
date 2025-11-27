@@ -173,6 +173,19 @@ body {
     position: relative;
 }
 
+.card.app {
+  transition: filter 0.3s ease;
+}
+
+.card.app:hover {
+  filter: brightness(90%); /* makes it 10% lighter */
+}
+
+[data-theme="dark"] .card.app:hover {
+  filter: brightness(110%); /* makes it 10% lighter */
+}
+
+
 .card .card-replica-info {
     color: var(--text-secondary);
     font-size: 0.875rem;
@@ -389,4 +402,3 @@ body {
 .footer a:hover {
     text-decoration: underline;
 }
-

@@ -179,11 +179,7 @@ class KuyalaSSEClient {
             </div>
         `;
 
-        if (existing) {
-            this.appsGrid.replaceChild(card, existing);
-        } else {
-            this.appsGrid.appendChild(card);
-        }
+        this.appsGrid.appendChild(card);
 
     }
 
