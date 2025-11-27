@@ -47,10 +47,9 @@ RUN chmod +x kuyala_production.sh
 ENV PATH="/opt/venv/bin:$PATH"
 
 # --- Environment Variables for Runtime Configuration ---
-ENV KUBECONFIG
+ENV KUBECONFIG=""
 ENV LOG_LEVEL="INFO"
-ENV KUBECONFIG
-ENV KUBECONFIG_CONTENT
+ENV KUBECONFIG_CONTENT=""
 # --- End Environment Variables ---
 
 # Change ownership of the app directory to the non-root user
