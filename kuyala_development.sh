@@ -1,45 +1,56 @@
 #!/bin/bash
-# File: debug.sh
-# Development startup script for Kuyala
+#
+# Development startup script for Kuyala.
+# This script should be run after activating the virtual environment.
+#
 
 set -e
 
 echo "Starting Kuyala in development mode..."
 echo "========================================"
 
-# Set development environment variables
-export FLASK_APP=app/app.py
-export FLASK_ENV=development
-export LOG_LEVEL=DEBUG
+# --- Environment Setup ---
+# Set Flask-specific variables for development mode
+export FLASK_APP="app/app.py"
+export FLASK_ENV="development"
 
-# Kubeconfig setup - try multiple locations
-if [ -f "$HOME/.kube/config" ]; then
+# Set application-specific environment variables
+export LOG_LEVEL=${LOG_LEVEL:-"DEBUG"}
+
+# Kubeconfig setup - check for the file and export the path
+# The application will handle the logic of finding the config,
+# but we can provide a default here for clarity.
+if [ -z "$KUBECONFIG" ] && [ -f "$HOME/.kube/config" ]; then
     export KUBECONFIG="$HOME/.kube/config"
-    echo "Using kubeconfig from: $KUBECONFIG"
-elif [ -n "$KUBECONFIG" ]; then
-    echo "Using kubeconfig from env: $KUBECONFIG"
-else
-    echo "Warning: No kubeconfig found. Set KUBECONFIG env variable or ensure ~/.kube/config exists"
 fi
 
 echo "Environment:"
-echo "  FLASK_APP: $FLASK_APP"
-echo "  FLASK_ENV: $FLASK_ENV"
-echo "  LOG_LEVEL: $LOG_LEVEL"
-echo "  KUBECONFIG: $KUBECONFIG"
+echo "  - FLASK_APP: $FLASK_APP"
+echo "  - FLASK_ENV: $FLASK_ENV"
+echo "  - LOG_LEVEL: $LOG_LEVEL"
+if [ -n "$KUBECONFIG" ]; then
+    echo "  - KUBECONFIG: $KUBECONFIG"
+else
+    echo "  - KUBECONFIG: Not set, will use in-cluster or default logic."
+fi
 echo "========================================"
 echo ""
 
-# Check if flask is installed
+# --- Pre-flight Check ---
+# Check if flask is available in the current environment
 if ! command -v flask &> /dev/null; then
-    echo "Error: Flask is not installed. Run: pip install -r requirements.txt"
+    echo "Error: 'flask' command not found."
+    echo "Have you activated the virtual environment? Run: source venv/bin/activate"
     exit 1
 fi
 
-# Start Flask development server
-echo "Starting Flask development server..."
+# --- Run Application ---
+echo "Starting Flask development server with auto-reload..."
 echo "Access the application at: http://localhost:5000"
-echo "Press Ctrl+C to stop"
+echo "Press Ctrl+C to stop."
 echo ""
 
+# Start the Flask development server
+# --reload: Automatically reloads the server when code changes are detected
+# --host=0.0.0.0: Makes the server accessible from outside the container/VM
 flask run --reload --host=0.0.0.0 --port=5000

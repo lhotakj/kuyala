@@ -1,6 +1,6 @@
 # ---- Builder Stage ----
 # Use a slim Python 3.12 image that has build tools available
-FROM python:3.12-slim-bookworm AS builder
+FROM python:3.14-slim-bookworm AS builder
 
 # Set the working directory
 WORKDIR /app
@@ -26,32 +26,31 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # ---- Final Stage ----
 # Start from a clean, minimal Python image
-FROM python:3.12-slim-bookworm
+FROM python:3.14-slim-bookworm
 
 # Set the working directory
 WORKDIR /app
 
-# Create a non-root user and group for better security
+# Create a non-root user for security
 RUN addgroup --system nonroot && adduser --system --ingroup nonroot nonroot
 
-# Copy the virtual environment (with installed packages) from the builder stage
+# Copy the virtual environment from the builder stage
 COPY --from=builder /opt/venv /opt/venv
 
-# Copy the application code into the final image
-COPY . /app
+# Copy the minified application code from the builder stage
+COPY --from=builder /app /app
 
-# Set the PATH to use the virtual environment in the final image
+# Make the production script executable
+RUN chmod +x kuyala_production.sh
+
+# Set the PATH to use the virtual environment
 ENV PATH="/opt/venv/bin:$PATH"
 
 # --- Environment Variables for Runtime Configuration ---
-# Declare the KUBECONFIG environment variable for runtime.
-# The kubernetes client library will automatically use this path.
-# It can be set during 'docker run', e.g., -e KUBECONFIG=/path/to/.kube/config
-ENV KUBECONFIG=""
-
-# Set the application's log level. Defaults to INFO.
-# Supported values: DEBUG, INFO, WARNING, ERROR, CRITICAL
+ENV KUBECONFIG
 ENV LOG_LEVEL="INFO"
+ENV KUBECONFIG
+ENV KUBECONFIG_CONTENT
 # --- End Environment Variables ---
 
 # Change ownership of the app directory to the non-root user
@@ -63,7 +62,5 @@ USER nonroot
 # Expose the port the app will run on
 EXPOSE 5000
 
-# Define the command to run the application
-# CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app.app:app"]
-CMD ["gunicorn", "--workers", "3", "--worker-class", "gevent", "--bind", "0.0.0.0:5000", "app.app:app"]
-
+# Define the command to run the application using the production script
+CMD ["./kuyala_production.sh"]

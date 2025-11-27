@@ -14,3 +14,8 @@ gevent==25.9.1
 
 # Optional but recommended
 python-dotenv==1.2.1
+
+# Minification
+rjsmin==1.2.2
+rcssmin==1.1.2
+htmlmin==0.1.12

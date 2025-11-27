@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kuyala
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kuyala-reader
+rules:
+- apiGroups: ["", "apps"]
+  resources: ["namespaces", "deployments", "nodes"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments/scale"]
+  verbs: ["patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kuyala-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kuyala-reader
+subjects:
+- kind: ServiceAccount
+  name: kuyala
+  namespace: default
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuyala
+  labels:
+    app: kuyala
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kuyala
+  template:
+    metadata:
+      labels:
+        app: kuyala
+    spec:
+      containers:
+      - name: kuyala
+        image: kuyala:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+        env:
+        - name: LOG_LEVEL
+          value: "INFO"
+        # For in-cluster authentication, the service account's token is
+        # automatically mounted, and no KUBECONFIG is needed.
+      serviceAccountName: kuyala
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kuyala
+spec:
+  selector:
+    app: kuyala
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: LoadBalancer

@@ -14,6 +14,7 @@ if [ -z "$VERSION" ]; then
     echo "Error: Could not retrieve version from get_version.py"
     exit 1
 fi
+echo "$VERSION" > ./.version
 
 echo "Building version: $VERSION"
 
