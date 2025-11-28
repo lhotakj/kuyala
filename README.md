@@ -113,8 +113,7 @@ This method is ideal for development and testing, giving you a live-reloading se
     To stop and remove the container `./docker/docker_stop.sh`
 
 ## Known issues / Limitations / Ideas
-Option 3 (As a "Current Limitations" Section)
-Current Limitations
+
 * No Built-in Authentication: Kuyala is intended for use in trusted, private network environments and lacks an internal authentication layer. For exposure to the internet, it should be placed behind an authenticating proxy.
 * Deployment Resources Only: The core functionality is strictly limited to managing `Deployment` resources. There is currently no support for toggling other workloads like `StatefulSets` or `Jobs`.
 
