@@ -21,6 +21,7 @@ class Backend(metaclass=SingletonMeta):
     kubernetes_version = None
     master_node_ip = None
     master_node_name = None
+    kuyala_version = None
 
 
 
@@ -34,6 +35,7 @@ class Backend(metaclass=SingletonMeta):
         log_level = getattr(self.logging, log_level_name)
         self.logging.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s')
 
+        self.kuyala_version = __version__
         self.logging.info(f"Kuyala application starting up, version {__version__}")
 
         # Add these lines to specifically suppress DEBUG logs from the K8s client and its HTTP dependency

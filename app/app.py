@@ -10,7 +10,7 @@ import queue
 from flask import Flask, render_template, jsonify, Response, request, stream_with_context
 from kubernetes import client, config, watch
 
-from .backend import backend
+from .backend import backend, __version__ as kuyala_version
 
 app = Flask(__name__, template_folder='./templates')
 kuyala_backend = backend.Backend()
@@ -24,6 +24,12 @@ config_error = ""
 if not kuyala_backend.client:
     config_error = "Configuration error: KUBECONFIG or KUBERNETES_SERVICE_HOST environment variable is not set and not running in-cluster."
     kuyala_backend.logging.error(config_error)
+
+
+@app.context_processor
+def inject_version():
+    """Injects the application version into all templates."""
+    return dict(kuyala_version=kuyala_version)
 
 
 class SSEClient:
@@ -113,6 +119,10 @@ if not config_error:
 @app.route('/')
 def main():
     return render_template('start.html', config_error=config_error)
+
+@app.route('/about')
+def about():
+    return render_template('about.html', config_error=config_error)
 
 
 @app.route('/events')
@@ -245,7 +255,8 @@ def health():
         'k8s_version': kuyala_backend.kubernetes_version,
         'master_node_ip': kuyala_backend.master_node_ip,
         'master_node_name': kuyala_backend.master_node_name,
-        'timestamp': time.time()
+        'timestamp': time.time(),
+        'kuyala_version': kuyala_version
     }), 200
 
 

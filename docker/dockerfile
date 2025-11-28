@@ -49,12 +49,10 @@ FROM python:3-slim-bookworm
 # Set the application's working directory
 WORKDIR /app
 
-# Create a non-root user with a dedicated home directory and a proper shell
+# Create a non-root user, their home directory, and a .bashrc in a single layer
 RUN addgroup --system nonroot && \
-    adduser --system --ingroup nonroot --home /home/nonroot --shell /bin/bash nonroot
-
-# Create a .bashrc file for the non-root user with common aliases
-RUN echo "alias ll='ls -alF'" >> /home/nonroot/.bashrc
+    adduser --system --ingroup nonroot --home /home/nonroot --shell /bin/bash nonroot && \
+    echo "alias ll='ls -alF'" >> /home/nonroot/.bashrc
 
 # Copy the cleaned virtual environment from the builder stage
 COPY --from=builder /opt/venv /opt/venv
@@ -65,26 +63,19 @@ COPY --from=builder /app/app ./app
 COPY --from=builder /app/gunicorn_config.py .
 COPY --from=builder /app/kuyala_production.sh .
 
-# Make the production script executable
-RUN chmod +x kuyala_production.sh
-
-# Set the PATH to use the virtual environment
+# --- Environment Variables ---
 ENV PATH="/opt/venv/bin:$PATH"
-
-# --- Environment Variables for Runtime Configuration ---
+ENV HOME=/home/nonroot
 ENV LOG_LEVEL="INFO"
 ENV KUBECONFIG=""
 ENV KUBECONFIG_CONTENT=""
-# --- End Environment Variables ---
 
-# Change ownership of the app directory and home directory
-RUN chown -R nonroot:nonroot /app /home/nonroot
+# Set file permissions in a single layer
+RUN chmod +x kuyala_production.sh && \
+    chown -R nonroot:nonroot /app /home/nonroot
 
 # Switch to the non-root user
 USER nonroot
-
-# Set the HOME environment variable
-ENV HOME=/home/nonroot
 
 # Expose the port the app will run on
 EXPOSE 5000
