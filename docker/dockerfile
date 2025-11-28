@@ -12,22 +12,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     npm \
     && rm -rf /var/lib/apt/lists/*
 
-# Use npm to install html-minifier globally
-RUN npm install -g html-minifier
+# Use npm to install html-minifier globally, then clean the cache
+RUN npm install -g html-minifier && npm cache clean --force
 
 # Create and activate a virtual environment for Python dependencies
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Install Python dependencies, including rjsmin and rcssmin
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install all dependencies (build and runtime)
+COPY requirements.txt requirements-build.txt ./
+RUN pip install --no-cache-dir -r requirements.txt -r requirements-build.txt
 
-# Copy the application source code into the builder stage
+# Copy the full application source code for the build process
 COPY . .
 
 # --- Minify Static Assets ---
-# This multi-step command finds and minifies all assets in place.
 RUN \
     echo "Minifying JavaScript files..."; \
     find app/static/js -name '*.js' -exec sh -c 'python -m rjsmin < "$0" > "$0.tmp" && mv "$0.tmp" "$0"' {} \; && \
@@ -38,23 +37,33 @@ RUN \
     echo "Minifying HTML files..."; \
     find app/templates -name '*.html' -exec sh -c 'html-minifier --collapse-whitespace --remove-comments --minify-js true --minify-css true -o "$0.tmp" "$0" && mv "$0.tmp" "$0"' {} \;
 
+# --- Clean Build-Time Dependencies ---
+# Uninstall the build-only packages to keep the final venv lean
+RUN pip uninstall -y -r requirements-build.txt
+
 
 # ---- Final Stage ----
-# Start from a clean, minimal Python image, which doesn't include Node.js or build tools
+# Start from a clean, minimal Python image
 FROM python:3-slim-bookworm
 
 # Set the application's working directory
 WORKDIR /app
 
-# Create a non-root user with a dedicated home directory
+# Create a non-root user with a dedicated home directory and a proper shell
 RUN addgroup --system nonroot && \
     adduser --system --ingroup nonroot --home /home/nonroot --shell /bin/bash nonroot
 
-# Copy the virtual environment (with dependencies) from the builder stage
+# Create a .bashrc file for the non-root user with common aliases
+RUN echo "alias ll='ls -alF'" >> /home/nonroot/.bashrc
+
+# Copy the cleaned virtual environment from the builder stage
 COPY --from=builder /opt/venv /opt/venv
 
-# Copy only the minified application code from the builder stage
-COPY --from=builder /app /app
+# --- Copy only the necessary runtime files ---
+# Selectively copy the minified app, the gunicorn config, and the startup script
+COPY --from=builder /app/app ./app
+COPY --from=builder /app/gunicorn_config.py .
+COPY --from=builder /app/kuyala_production.sh .
 
 # Make the production script executable
 RUN chmod +x kuyala_production.sh
@@ -63,20 +72,18 @@ RUN chmod +x kuyala_production.sh
 ENV PATH="/opt/venv/bin:$PATH"
 
 # --- Environment Variables for Runtime Configuration ---
-# These provide default values that can be overridden at runtime.
 ENV LOG_LEVEL="INFO"
 ENV KUBECONFIG=""
 ENV KUBECONFIG_CONTENT=""
 # --- End Environment Variables ---
 
-# Change ownership of the app directory to the non-root user
-# Also ensure the home directory is owned by the non-root user
+# Change ownership of the app directory and home directory
 RUN chown -R nonroot:nonroot /app /home/nonroot
 
 # Switch to the non-root user
 USER nonroot
 
-# Set the HOME environment variable so 'cd ~' works correctly
+# Set the HOME environment variable
 ENV HOME=/home/nonroot
 
 # Expose the port the app will run on
