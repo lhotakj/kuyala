@@ -43,8 +43,13 @@
 
 
         <div class="card bg" >
-            <h1 class="card-header">Eligible Deployments:</h1>
-            <div id="stats"></div>
+            <h1 class="card-header">Cluster Stats:</h1>
+            <div id="stats">
+                <p>Total/Eligible Deployments: <span id="stat-deployments">-/-</span></p>
+                <p>Total memory usage of the whole cluster: <span id="stat-total-mem">-</span></p>
+                <p>Total memory used by eligible deployments: <span id="stat-eligible-mem">-</span></p>
+                <p>Total/Eligible Running Pods: <span id="stat-pods">-/-</span></p>
+            </div>
         </div>
 
         <div id="appsGrid" class="grid apps">
@@ -60,6 +65,28 @@
     </footer>
 
     {% if config_error == "" %}
+    <script>
+        function formatBytes(bytes, decimals = 1) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return (bytes / Math.pow(k, i)).toFixed(dm) + ' ' + sizes[i];
+        }
+
+        const eventSource = new EventSource("/events");
+
+        eventSource.addEventListener("stats_update", function(event) {
+            console.log("Received stats_update:", event.data); // Debugging line
+            const data = JSON.parse(event.data);
+            document.getElementById('stat-deployments').textContent = `${data.eligible_deployments}/${data.total_deployments}`;
+            document.getElementById('stat-total-mem').textContent = formatBytes(data.total_memory_usage);
+            document.getElementById('stat-eligible-mem').textContent = formatBytes(data.eligible_memory_usage);
+            document.getElementById('stat-pods').textContent = `${data.eligible_running_pods}/${data.running_pods}`;
+        });
+    </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/apps.js') }}"></script>
     {% endif %}

@@ -9,7 +9,7 @@ metadata:
   name: kuyala-reader
 rules:
 - apiGroups: ["", "apps"]
-  resources: ["namespaces", "deployments", "nodes"]
+  resources: ["namespaces", "deployments", "nodes", "pods"]
   verbs: ["get", "list", "watch"]
 - apiGroups: ["apps"]
   resources: ["deployments/scale"]

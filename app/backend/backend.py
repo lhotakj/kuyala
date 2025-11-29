@@ -5,6 +5,18 @@ from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 from . import __version__
 
+def parse_memory(s):
+    if not s:
+        return 0
+    s = s.lower()
+    if s.endswith('gi'):
+        return int(s[:-2]) * 1024**3
+    elif s.endswith('mi'):
+        return int(s[:-2]) * 1024**2
+    elif s.endswith('ki'):
+        return int(s[:-2]) * 1024
+    return int(s)
+
 class SingletonMeta(type):
     _instances = {}
 
@@ -173,6 +185,33 @@ class Backend(metaclass=SingletonMeta):
             logging.error(f"An unexpected error occurred during scaling action: {str(e)}")
             return None # Indicate failure
 
+    def get_single_deployment_data(self, namespace, name):
+        """Fetches and formats data for a single deployment."""
+        try:
+            apps_v1 = client.AppsV1Api(self.client)
+            dep = apps_v1.read_namespaced_deployment(name, namespace)
+            
+            annotations = dep.metadata.annotations or {}
+            if "kuyala.enabled" not in annotations:
+                return None
+
+            replicas_current = dep.status.replicas if dep.status.replicas is not None else 0
+            
+            return {
+                "type": "MODIFIED",
+                "namespace": dep.metadata.namespace,
+                "name": dep.metadata.name,
+                "applicationName": annotations.get("kuyala.applicationName", dep.metadata.name),
+                "backgroundColor": annotations.get("kuyala.backgroundColor", ""),
+                "textColor": annotations.get("kuyala.textColor", ""),
+                "replicasOff": int(annotations.get("kuyala.replicasOff", 0)),
+                "replicasOn": int(annotations.get("kuyala.replicasOn", 1)),
+                "replicasCurrent": replicas_current,
+                "timestamp": time.time()
+            }
+        except ApiException:
+            return None
+
 
     def get_current_list(self):
         if not self.client:
@@ -237,3 +276,65 @@ class Backend(metaclass=SingletonMeta):
                 "status": "error",
                 "message": f"An unexpected error occurred: {str(e)}"
             }
+
+    def get_cluster_stats(self):
+        if not self.client:
+            return None
+
+        try:
+            core_v1 = client.CoreV1Api(self.client)
+            apps_v1 = client.AppsV1Api(self.client)
+
+            all_deployments = apps_v1.list_deployment_for_all_namespaces().items
+            all_pods = core_v1.list_pod_for_all_namespaces().items
+
+            eligible_deployments = [
+                d for d in all_deployments
+                if d.metadata.annotations and "kuyala.enabled" in d.metadata.annotations
+            ]
+
+            total_memory_usage = 0
+            eligible_memory_usage = 0
+            eligible_running_pods = 0
+            running_pods = 0
+
+            # Calculate total running pods and memory usage from all running pods
+            for pod in all_pods:
+                if pod.status.phase == 'Running':
+                    running_pods += 1
+                    for container in pod.spec.containers:
+                        requests = container.resources.requests
+                        if requests and 'memory' in requests:
+                            total_memory_usage += parse_memory(requests['memory'])
+
+            # Calculate memory usage and pod count for eligible deployments specifically
+            for dep in eligible_deployments:
+                # Create a label selector string from the deployment's matchLabels
+                selector = ",".join([f"{k}={v}" for k, v in dep.spec.selector.match_labels.items()])
+                
+                # Use the API to list pods matching this selector
+                dep_pods = core_v1.list_namespaced_pod(namespace=dep.metadata.namespace, label_selector=selector).items
+                
+                for pod in dep_pods:
+                    if pod.status.phase == 'Running':
+                        eligible_running_pods += 1
+                        for container in pod.spec.containers:
+                            requests = container.resources.requests
+                            if requests and 'memory' in requests:
+                                eligible_memory_usage += parse_memory(requests['memory'])
+            
+            return {
+                "total_deployments": len(all_deployments),
+                "eligible_deployments": len(eligible_deployments),
+                "total_memory_usage": total_memory_usage,
+                "eligible_memory_usage": eligible_memory_usage,
+                "running_pods": running_pods,
+                "eligible_running_pods": eligible_running_pods,
+            }
+
+        except ApiException as e:
+            self.logging.error(f"Kubernetes API error while fetching stats: {e.reason}")
+            return None
+        except Exception as e:
+            self.logging.error(f"An unexpected error occurred while fetching stats: {e}")
+            return None

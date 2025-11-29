@@ -36,7 +36,6 @@ class KuyalaSSEClient {
 
             this.eventSource.addEventListener('connected', (e) => {
                 const data = JSON.parse(e.data);
-                console.log(data)
                 this.connectionInfo.innerHTML = data.server_node_name + " (" + data.server_node_ip + ") " + this.iconConnected
                 console.log('Connected with client ID:', data.client_id);
             });
@@ -45,7 +44,6 @@ class KuyalaSSEClient {
                 const response = JSON.parse(e.data);
                 if (response.status === 'success') {
                     console.log('Received initial data:', response.data.length, 'deployments');
-                    console.log('Raw data:', response.data);
                     const sortedData = [...response.data].sort((a, b) => a.applicationName.localeCompare(b.applicationName));
                     this.renderDeployments(sortedData);
                 } else {
@@ -55,13 +53,12 @@ class KuyalaSSEClient {
 
             this.eventSource.addEventListener('deployment_update', (e) => {
                 const update = JSON.parse(e.data);
-                console.log('Deployment update:', update.type, update.namespace + '/' + update.name);
+                console.log('Deployment update received:', update.type, update.namespace + '/' + update.name);
                 this.handleDeploymentUpdate(update);
             });
 
             this.eventSource.addEventListener('heartbeat', (e) => {
-                const data = JSON.parse(e.data);
-                console.log('Heartbeat received at:', new Date(data.timestamp * 1000).toLocaleTimeString());
+                console.log('Heartbeat received at:', new Date(JSON.parse(e.data).timestamp * 1000).toLocaleTimeString());
             });
 
             this.eventSource.addEventListener('error', (e) => {
@@ -122,7 +119,6 @@ class KuyalaSSEClient {
     }
 
     renderDeployments(deployments) {
-        // Clear existing grid
         this.appsGrid.innerHTML = '';
         this.deployments.clear();
 
@@ -142,10 +138,26 @@ class KuyalaSSEClient {
         const key = `${deployment.namespace}/${deployment.name}`;
         const cardId = `card-${key.replace(/\//g, '-')}`;
 
-        // Remove existing card if present
         const existing = document.getElementById(cardId);
         if (existing) {
             existing.remove();
+        }
+
+        const card = document.createElement('div');
+        card.className = 'card app';
+        card.id = cardId;
+        this.appsGrid.appendChild(card);
+        this.updateDeploymentCard(deployment);
+    }
+
+    updateDeploymentCard(deployment) {
+        const key = `${deployment.namespace}/${deployment.name}`;
+        const cardId = `card-${key.replace(/\//g, '-')}`;
+        let card = document.getElementById(cardId);
+
+        if (!card) {
+            this.createDeploymentCard(deployment);
+            return;
         }
 
         const isOn = deployment.replicasCurrent > 0;
@@ -153,12 +165,8 @@ class KuyalaSSEClient {
         const buttonClass = isOn ? 'button-turn-off' : 'button-turn-on';
         const statusText = isOn ? 'Running' : 'Stopped';
         const lozengeClass = (isOn ? 'lozenge-light-green' : 'lozenge-light-red');
+        const cardHeaderStyle = `color: ${deployment.textColor || ''}; position: absolute; top: 0; padding-left: 10px; padding-right: 10px; left: 22px; top: 22px; background-color: ${deployment.backgroundColor || ''}; border-radius: 12px;`;
 
-        const card = document.createElement('div');
-        card.className = 'card app';
-        //card.style.zIndex = 3;
-        const cardHeaderStyle = ("color: " + deployment.textColor  || "") + ("; position: absolute; top: 0; padding-left: 10px; padding-right: 10px; left: 22px; top: 22px; background-color: " + deployment.backgroundColor + "; border-radius: 12px;" || "");
-        card.id = cardId;
         card.innerHTML = `            
             <div class="lozenge ${lozengeClass}">${statusText}</div>            
             <span class="card-header" style="${cardHeaderStyle}">${this.escapeHtml(deployment.applicationName)}</span>
@@ -172,47 +180,11 @@ class KuyalaSSEClient {
             </p>
             <div class="button-group">
                 <button class="button ${buttonClass}" 
-                        onclick="kuyalaApp.toggleDeployment('${this.escapeHtml(deployment.namespace)}', '${this.escapeHtml(deployment.name)}', ${!isOn})"
-                        id="btn-${cardId}">
+                        onclick="kuyalaApp.toggleDeployment(this, '${this.escapeHtml(deployment.namespace)}', '${this.escapeHtml(deployment.name)}', ${!isOn})">
                     ${buttonText}
                 </button>
             </div>
         `;
-
-        this.appsGrid.appendChild(card);
-
-    }
-
-    // updateDeploymentCard(deployment) {
-    //     this.createDeploymentCard(deployment);
-    // }
-
-    updateDeploymentCard(deployment) {
-        const key = `${deployment.namespace}/${deployment.name}`;
-        const cardId = `card-${key.replace(/\//g, '-')}`;
-        const card = document.getElementById(cardId);
-
-        if (card) {
-            // Just update the relevant parts
-            const isOn = deployment.replicasCurrent > 0;
-            const buttonText = isOn ? 'Turn Off' : 'Turn On';
-            const buttonClass = isOn ? 'button-turn-off' : 'button-turn-on';
-            const statusText = isOn ? 'Running' : 'Stopped';
-            const lozengeClass = isOn ? 'lozenge-light-green' : 'lozenge-light-red';
-
-            card.querySelector('.lozenge').textContent = statusText;
-            card.querySelector('.lozenge').className = `lozenge ${lozengeClass}`;
-            card.querySelector('.card-replica-info').textContent =
-                `Current replicas: ${deployment.replicasCurrent} ${isOn ? `(will scale to ${deployment.replicasOff})` : `(will scale to ${deployment.replicasOn})`}`;
-
-            const button = card.querySelector('button');
-            button.textContent = buttonText;
-            button.className = `button ${buttonClass}`;
-            button.setAttribute('onclick', `kuyalaApp.toggleDeployment('${deployment.namespace}', '${deployment.name}', ${!isOn})`);
-        } else {
-            // If card doesn’t exist yet, create it
-            this.createDeploymentCard(deployment);
-        }
     }
 
     removeDeploymentCard(key) {
@@ -223,25 +195,24 @@ class KuyalaSSEClient {
         }
     }
 
-    async toggleDeployment(namespace, name, turnOn) {
+    async toggleDeployment(button, namespace, name, turnOn) {
         const deployment = this.deployments.get(`${namespace}/${name}`);
         if (!deployment) {
             this.showStatus('Deployment not found', 'error');
             return;
         }
 
+        // --- Optimistic UI Update ---
+        // Create a fake deployment object with the desired future state
+        const optimisticUpdate = { ...deployment };
+        optimisticUpdate.replicasCurrent = turnOn ? deployment.replicasOn : deployment.replicasOff;
+        this.updateDeploymentCard(optimisticUpdate);
+        // --- End Optimistic UI Update ---
+
         const scale = turnOn ? deployment.replicasOn : deployment.replicasOff;
         const action = turnOn ? 'starting' : 'stopping';
 
         console.log(`${action} deployment ${namespace}/${name} (scale to ${scale})`);
-
-        // Disable button during action
-        const cardId = `card-${namespace}-${name}`.replace(/\//g, '-');
-        const button = document.getElementById(`btn-${cardId}`);
-        if (button) {
-            button.disabled = true;
-            button.textContent = action === 'starting' ? 'Starting...' : 'Stopping...';
-        }
 
         try {
             const response = await fetch('/action', {
@@ -258,32 +229,17 @@ class KuyalaSSEClient {
 
             const result = await response.json();
 
-            if (result.status === 'success') {
-                console.log(`Successfully scaled ${namespace}/${name} to ${result.scaled_to} replicas`);
-                this.showStatus(
-                    `${deployment.applicationName} ${turnOn ? 'started' : 'stopped'} successfully`,
-                    'success'
-                );
-
-                // Refresh button state right away
-                if (button) {
-                    button.disabled = false;
-                    button.textContent = turnOn ? 'Turn Off' : 'Turn On';
-                }
-
-            } else {
+            if (result.status !== 'success') {
                 throw new Error(result.message || 'Action failed');
             }
-
+            // Success! The UI is already updated. The authoritative SSE event will
+            // eventually arrive and confirm the state, or correct it if something went wrong.
+            
         } catch (error) {
             console.error('Error toggling deployment:', error);
             this.showStatus(`Failed to ${action} deployment: ${error.message}`, 'error');
-            
-            // Re-enable button
-            if (button) {
-                button.disabled = false;
-                button.textContent = turnOn ? 'Turn On' : 'Turn Off';
-            }
+            // If the fetch fails, revert the optimistic update by re-rendering with the original data
+            this.updateDeploymentCard(deployment);
         }
     }
 
@@ -307,14 +263,6 @@ class KuyalaSSEClient {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
-    }
-
-    getConnectionStatus() {
-        return {
-            connected: this.isConnected,
-            reconnectAttempts: this.reconnectAttempts,
-            deploymentsCount: this.deployments.size
-        };
     }
 }
 
