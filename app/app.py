@@ -168,6 +168,11 @@ if not config_error:
 def main():
     return render_template('start.html', config_error=config_error)
 
+@app.route('/about')
+def about():
+    return render_template('about.html', config_error=config_error)
+
+
 
 @app.route('/events')
 def events():

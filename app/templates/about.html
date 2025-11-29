@@ -32,23 +32,26 @@
         </div>
     </header>
 
-    <div id="status-message" style="display: none;"></div>
-
     <main class="container">
-        {% if config_error != "" %}
-        <div class="alert alert-error">
-            Invalid configuration. Expecting KUBECONFIG environment variable to be passed to docker. Please refer to the Get Started documentation.
-        </div>
-        {% endif %}
-
-
 
         <div class="card bg" >
-            <h1 class="card-header">Welcome to Kuyala</h1>
-            <p class="card-description">
-                Kuyala is a real-time Kubernetes deployment manager.
-                Manage your deployments with live updates via Server-Sent Events.
-            </p>
+
+<h2 class="card-header">The Journey: From Docker Simplicity to Kubernetes Power</h2>
+As any seasoned DevOps engineer knows, the path to robust application deployment often begins with the elegant simplicity of Docker, quickly evolving to docker-compose for local orchestration. The quest for more resilient and scalable solutions naturally leads many to platforms like Swarm, or the intuitive, GitOps-friendly management offered by Portainer.
+Yet, the ultimate frontier for modern orchestration is often Kubernetes. Its power and flexibility are unparalleled, but this immense capability comes with a significant resource footprint and a steep learning curve for even seemingly simple tasks. In resource-constrained environments—be it a personal homelab, a development cluster, or a small-scale production setup—the desire for a straightforward "stop stack" functionality, akin to what we enjoyed in simpler tools, often clashes with the complexity of configuring advanced solutions like KEDA with Prometheus.
+This very challenge sparked the inception of Kuyala. It was born from a personal need to reconcile the operational simplicity of previous tools with the raw power of Kubernetes, creating a bridge between the two worlds.
+
+    <h2 class="card-header">The Philosophy: Resilient Simplicity</h2>
+Kuyala is a testament to the belief that powerful technology can also be elegantly simple. While primarily conceived for optimizing my own single-node Kubernetes setup, it has been engineered with production-grade resilience and stability in mind. It leverages modern web technologies like Server-Sent Events (SSE) for real-time updates, powered by a high-concurrency, gevent-patched Gunicorn engine, all designed for self-healing and robust operation.
+
+    <h2 class="card-header">The Name: "Kuyala"</h2>
+The name "Kuyala" is derived from a Congo language, where it signifies "control." This meaning perfectly encapsulates the essence of the tool: to provide direct, intuitive, and effective control over your Kubernetes deployments. Just as the word implies mastery and guidance, Kuyala empowers you to manage your applications with precision, allowing you to effortlessly toggle their operational state and optimize resource consumption. It's about putting the reins of your Kubernetes workloads firmly in your hands, simplifying complex orchestration into clear, actionable commands.
+
+    <h2 class="card-header">About the Creator</h2>
+Behind Kuyala is Jaroslav Lhoták, a passionate engineer with a deep-seated appreciation for efficient infrastructure and practical problem-solving. Driven by the unique challenges of optimizing personal homelab environments and a continuous desire to streamline operational complexities, Jaroslav built Kuyala as a direct response to a common pain point. This tool is a reflection of that journey—a practical solution crafted to empower fellow engineers with simpler, more effective control over their Kubernetes landscapes.
+
+<h2 class="card-header">Join the Journey</h2>
+Kuyala is intentionally lean and focused. Community contributions are highly valued and encouraged. If you envision features like advanced authentication, more granular RBAC integration, or any other enhancements, please feel free to open an issue or submit a pull request. Your insights can help shape the future of Kuyala!
 
             <div class="button-group">
                 <a class="button button-outline" href="https://github.com/lhotakj/kuyala" target="_blank" rel="noopener">Visit Github</a>

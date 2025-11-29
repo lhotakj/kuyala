@@ -432,3 +432,18 @@ body {
   opacity: 0.2;
   z-index: -1;
 }
+
+h2 {
+    font-size: 120%;
+    color: #eee;
+}
+
+[data-theme="dark"] h2 {
+    font-size: 120%;
+    color: #999;
+}
+
+
+h3 {
+    padding-top: 5px;
+}
